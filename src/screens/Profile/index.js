@@ -1,8 +1,32 @@
 import React, { useState, useEffect } from "react";
 import { Box, Text, Image, VStack, ScrollView } from "@gluestack-ui/themed";
 import { Button } from "../../components";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const Profile = ({ navigation }) => {
+  const [userData, setUserData] = useState({
+    nama: "",
+    email: "",
+    nomorPonsel: "",
+  });
+
+  useEffect(() => {
+    fetchUserData();
+  }, []);
+
+  const fetchUserData = async () => {
+    try {
+      const userString = await AsyncStorage.getItem("userData");
+
+      if (userString) {
+        const user = JSON.parse(userString);
+        setUserData(user);
+      }
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+    }
+  };
+
   return (
     <Box
       mt={"$5"}
@@ -21,13 +45,8 @@ const Profile = ({ navigation }) => {
             alignSelf="center"
             alt="Foto Profil"
           />
-          <Text
-            fontSize={"$xl"}
-            alignSelf="center"
-            marginTop={"$5"}
-            fontWeight="$bold"
-          >
-            Nama User
+          <Text fontSize={"$xl"} alignSelf="center" marginTop={"$5"} fontWeight="$bold">
+            {userData.nama}
           </Text>
         </VStack>
         <Box
@@ -44,12 +63,20 @@ const Profile = ({ navigation }) => {
           <Text color="$black" fontWeight="$bold" fontSize={"$xl"}>
             Data Diri
           </Text>
+		  <Box mt={"$5"}>
+		  <Text color="$black" fontSize={"$sm"}>
+              Nama
+            </Text>
+            <Text color="$black" fontSize={"$xl"} mt={"$2"}>
+              {userData.nama}
+            </Text>
+			</Box>
           <Box mt={"$5"}>
             <Text color="$black" fontSize={"$sm"}>
               Email
             </Text>
             <Text color="$black" fontSize={"$xl"} mt={"$2"}>
-              Fitri Rayani Siahaan
+              {userData.email}
             </Text>
           </Box>
           <Box mt={"$5"}>
@@ -57,15 +84,16 @@ const Profile = ({ navigation }) => {
               Nomor Ponsel
             </Text>
             <Text color="$black" fontSize={"$xl"} mt={"$2"}>
-              082166864216
+              {userData.nomorPonsel}
             </Text>
           </Box>
         </Box>
         <Button
           type="text"
-          title={"Login"}
+          title={"Logout"}
           padding={"$3"}
           onPress={() => {
+            AsyncStorage.removeItem("userData");
             navigation.navigate("Login");
           }}
         />

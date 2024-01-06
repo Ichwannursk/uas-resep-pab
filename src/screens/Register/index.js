@@ -1,20 +1,48 @@
 import React, { useState } from "react";
 import {
   Box,
-  Alert,
-  FormControl,
   Text,
-  Modal,
-  ModalBackdrop,
-  AlertText,
+  FormControl,
+  Heading,
 } from "@gluestack-ui/themed";
 import { Input, Button } from "../../components";
-import BackFAB from "../../components/kecil/back_fab";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const Register = ({ navigation }) => {
+  const [nama, setNama] = useState("");
+  const [email, setEmail] = useState("");
+  const [nomorPonsel, setNomorPonsel] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+
+  const handleRegister = async () => {
+    try {
+      const existingUsersString = await AsyncStorage.getItem("registeredUsers");
+      const existingUsers = existingUsersString ? JSON.parse(existingUsersString) : [];
+
+      const isEmailRegistered = existingUsers.some((user) => user.email === email);
+      const isNomorPonselRegistered = existingUsers.some((user) => user.nomorPonsel === nomorPonsel);
+
+      if (isEmailRegistered || isNomorPonselRegistered) {
+        setError("Email or Nomor Ponsel is already registered.");
+        return;
+      }
+
+      const newUser = { nama, email, nomorPonsel, password };
+      existingUsers.push(newUser);
+
+      await AsyncStorage.setItem("registeredUsers", JSON.stringify(existingUsers));
+      await AsyncStorage.setItem("userData", JSON.stringify(newUser));
+
+      navigation.navigate("Login");
+    } catch (error) {
+      console.error("Error during registration:", error);
+      setError("An error occurred during registration.");
+    }
+  };
+
   return (
     <Box flex={1} backgroundColor="white" justifyContent="center">
-      <BackFAB />
       <Box
         shadowColor="$white"
         shadowOffset={{ width: 0, height: 2 }}
@@ -27,40 +55,45 @@ const Register = ({ navigation }) => {
         marginHorizontal={"$6"}
         p={"$5"}
       >
-        <Text size="3xl" color="#038861" fontWeight="bold">
+        <Heading size="3xl" color="#038861">
           Create an Account
-        </Text>
+        </Heading>
         <Text size="sm" color="$black" my={"$1"}>
           Sign up to continue!
         </Text>
         <FormControl>
           <Input
             label="Nama"
-            value={null}
-            onChangeText={() => {}}
+            value={nama}
+            onChangeText={(text) => setNama(text)}
             height={"$10"}
           />
           <Input
             label="Email Address"
-            value={null}
-            onChangeText={() => {}}
+            value={email}
+            onChangeText={(text) => setEmail(text)}
             height={"$10"}
           />
-          {/* <Input
-            label="No. Handphone"
+          <Input
+            label="Nomor Ponsel"
             keyboardType="phone-pad"
-            value={null}
-            onChangeText={() => {}}
+            value={nomorPonsel}
+            onChangeText={(text) => setNomorPonsel(text)}
             height={"$10"}
-          /> */}
+          />
           <Input
             label="Password"
             secureTextEntry
-            value={null}
-            onChangeText={() => {}}
+            value={password}
+            onChangeText={(text) => setPassword(text)}
             height={"$10"}
           />
         </FormControl>
+        {error && (
+          <Text color="red" textAlign="center">
+            {error}
+          </Text>
+        )}
         <Box flexDirection="column" my={"$5"}>
           <Button
             color="#038861"
@@ -69,9 +102,7 @@ const Register = ({ navigation }) => {
             icon="submit"
             padding={"$3"}
             fontSize={"$md"}
-            onPress={() => {
-              navigation.navigate("Login");
-            }}
+            onPress={handleRegister}
           />
         </Box>
       </Box>
